@@ -154,27 +154,34 @@ static dispatch_once_t _sharedInstanceGuard;
  */
 + (NSString *)userAgentString {
     
-    // Get the current user agent.  Yes, this is hack-ish.  Alternatives are more hackish.  UIWebView
-    // really doesn't want you to know about its HTTP headers.
-    NSString *currentUserAgent = [SFSDKWebUtils currentUserAgentForApp];
+    NSString *uaString = [[NSUserDefaults standardUserDefaults] objectForKey:kUserAgentPropKey];
     
-    UIDevice *curDevice = [UIDevice currentDevice];
-    NSString *appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleNameKey];
-    NSString *appVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleVersionKey];
+    if (uaString == nil) {
+        
+        NSString *currentUserAgent = [SFSDKWebUtils currentUserAgentForApp];
+        
+        UIDevice *curDevice = [UIDevice currentDevice];
+        NSString *appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleNameKey];
+        NSString *appVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleVersionKey];
+        
+        uaString = [NSString stringWithFormat:
+                                 @"SalesforceMobileSDK/%@ %@/%@ (%@) %@/%@ %@ %@",
+                                 kSFMobileSDKVersion,
+                                 [curDevice systemName],
+                                 [curDevice systemVersion],
+                                 [curDevice model],
+                                 appName,
+                                 appVersion,
+                                 kSFMobileSDKNativeDesignator,
+                                 currentUserAgent
+                                 ];
+        
+        NSDictionary *dictionary = [[NSDictionary alloc] initWithObjectsAndKeys:uaString, kUserAgentPropKey, nil];
+        [[NSUserDefaults standardUserDefaults] registerDefaults:dictionary];
+    }
+    
+    return uaString;
 
-    NSString *myUserAgent = [NSString stringWithFormat:
-                             @"SalesforceMobileSDK/%@ %@/%@ (%@) %@/%@ %@ %@",
-                             kSFMobileSDKVersion,
-                             [curDevice systemName],
-                             [curDevice systemVersion],
-                             [curDevice model],
-                             appName,
-                             appVersion,
-                             kSFMobileSDKNativeDesignator,
-                             currentUserAgent
-                             ];
-    
-    return myUserAgent;
 }
 
 
